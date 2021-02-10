@@ -1,0 +1,137 @@
+---
+title: "Lab 4"
+author: "Ishaan Phadnis"
+date: "October 4, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Instructions
+
+**Exercises:**  2,3 (Pg. 151); 2,4 (Pg. 156); 1,2 (Pgs. 160-161); 2 (Pg. 163); 2,3,4 (Pg. 168)
+
+**Submission:** Submit via an electronic document on Sakai. Must be submitted as a HTML file generated in RStudio. All assigned problems are chosen according to the textbook *R for Data Science*. You do not need R code to answer every question. If you answer without using R code, delete the code chunk. If the question requires R code, make sure you display R code. If the question requires a figure, make sure you display a figure. A lot of the questions can be answered in written response, but require R code and/or figures for understanding and explaining.
+
+```{r, include=FALSE}
+library(tidyverse)
+```
+
+# Chapter 9 (Pg. 151)
+
+##  Exercise 2
+```{r}
+#
+
+cases <-
+  table2 %>%
+  filter(year == 1999,
+         type == "cases")
+pop <-
+  table2 %>%
+  filter(year == 1999,
+         type == "population")
+rate1 <-
+  bind_cols(cases, pop) %>%
+  mutate(rate = count/count1) %>%
+  select(-ends_with("1"), -type)
+
+cases2 <-
+  table2 %>%
+  filter(year == 2000,
+         type == "cases")
+pop2 <-
+  table2 %>%
+  filter(year == 2000,
+         type == "population")
+rate2 <-
+  bind_cols(cases2, pop2) %>%
+  mutate(rate = count/count1) %>%
+  select(-ends_with("1"), -type)
+
+bind_rows(rate1, rate2)
+
+table4a %>% mutate(rate1 = `1999` / table4b$`1999` * 10000, rate2 = `2000` / table4b$`2000` * 10000)
+```
+
+In a way, it's better to work with ''table2' because we use the filtering techniques to understand the operations. With 'table4a' though, this is more condensed. If we wanted to turn the 'table4a/4b' result into a more organized version, it would be more complicated.
+
+##  Exercise 3
+```{r}
+#
+table2 %>% filter(type == "cases") %>% ggplot(aes(year, count, group = country, colour = country)) + geom_point() + geom_line()
+```
+
+The first thing that needs to be done is to filter for cases.
+
+# Chapter 9 (Pg. 156)
+
+##  Exercise 2
+```{r, eval = FALSE}
+#
+
+table4a %>% gather(1999, 2000, key = "year", value = "cases")
+
+```
+
+The reason why this code fails is because 'gather' can't find the names of the columns. The columns can't be named with numbers in R without quoting them using ''.
+
+##  Exercise 4
+```{r}
+#
+
+preg <- tribble(~pregnant, ~male, ~female, "yes", NA, 10, "no", 20, 12)
+preg
+```
+
+It would make more sense to 'gather' the gender column instead of spreading the pregnant column. The variables are pregnancy status and gender.
+
+# Chapter 9 (Pgs. 160-161)
+
+##  Exercise 1
+```{r}
+#
+tibble(x = c("a,b,c", "d,e,f,g", "h,i,j")) %>% separate(x, c("one", "two", "three"))
+
+tibble(x = c("a,b,c", "d,e", "f,g,i")) %>% separate(x, c("one", "two", "three"))
+```
+
+Basically, 'extra' tells 'separate()' what to do if there are too many pieces while 'fill' tells 'separate()' what to do if there aren't enough pieces.
+
+##  Exercise 2
+
+The 'remove' argument basically gets rid of input columns in the result data frame. The reason why it is set to 'FALSE' is so that you can create a new variable, but keep the previous one too.
+
+# Chapter 9 (Pg. 163)
+
+##  Exercise 2
+
+The 'direction' argument (for 'fill') determines whether 'NA' values should be replaced by the previous non-empty value ("down") or the next non-empty value ("up").
+
+# Chapter 9 (Pg. 168)
+
+##  Exercise 2
+```{r, eval = FALSE}
+#
+mutate(key = stringr::str_replace(key, "newrel", "new_rel"))
+```
+
+So basically, if we have 'new_sp' and 'newrel' and we separate on '_', we would get a column where there is 'new' and 'newrel' together and in the other column there would only be 'sp'. If we replace 'new_sp' with 'new_rel', then the same pattern is constant in the same column.
+
+##  Exercise 3
+```{r}
+#
+who %>% count(country, iso2, iso3) %>% count(country) %>% filter(n > 1)
+```
+
+If there were repetitions of country, then this value would be equal to greater than 1, which is not in this case. Therefore, 'iso2' and 'iso3' are redundant.
+
+##  Exercise 4
+```{r}
+#
+visual <- who %>% gather(new_sp_m014:newrel_f65, key = "key", value = "cases", na.rm = TRUE) %>% mutate(key = stringr::str_replace(key, "newrel", "new_rel")) %>% separate(key, c("new", "type", "sexage"), sep = "_") %>% select(-new, -iso2, -iso3) %>% separate(sexage, c("sex", "age"), sep = 1)
+
+visual %>% group_by(country, year, sex) %>% summarize(n = sum(cases)) %>% ggplot(aes(year, n, group = country)) + geom_line(alpha = 2/4) + facet_wrap(~ sex)
+```

@@ -1,0 +1,179 @@
+---
+title: "Lab 6"
+author: "Ishaan Phadnis"
+date: "November 8, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Instructions
+
+**Exercises:**  4 (Pg. 302); 1 (Pgs. 316-317); 1 (Pgs. 328-329); 1, 2 (Pgs. 353-354)
+
+**Submission:** Submit via an electronic document on Sakai. Must be submitted as a HTML file generated in RStudio. All assigned problems are chosen according to the textbook *R for Data Science*. You do not need R code to answer every question. If you answer without using R code, delete the code chunk. If the question requires R code, make sure you display R code. If the question requires a figure, make sure you display a figure. A lot of the questions can be answered in written response, but require R code and/or figures for understanding and explaining.
+
+```{r, include=FALSE}
+library(tidyverse)
+```
+
+# Chapter 16 (Pg. 302)
+
+##  Exercise 4
+
+### a)
+```{r}
+#
+function_last = function(x){
+  x[[length(x)]]
+}
+
+function_last(3:7)
+```
+
+### b)
+```{r}
+#
+function_even = function(x) {
+  x[seq(2, length(x), by = 2)]
+}
+
+function_even(5:13)
+```
+
+### c)
+```{r}
+#
+function_notlast = function(x) {
+  x[-length(x)]
+}
+
+function_notlast(2:9)
+```
+
+### d)
+```{r}
+#
+function_even2 = function(x) {
+  x[!is.na(x) & x %% 2 == 0]
+}
+
+function_even2(sample(c(NA, 10:50), 40))
+```
+
+# Chapter 17 (Pgs. 316-317)
+
+##  Exercise 1
+
+### a)
+```{r}
+#
+mean_mtcars = vector("double", ncol(mtcars))
+names(mean_mtcars) = names(mtcars)
+
+for (i in names(mtcars)) {
+  mean_mtcars[i] = mean(mtcars[[i]])
+}
+
+mean_mtcars
+```
+
+### b)
+```{r}
+#
+flight_type = vector("list", ncol(nycflights13::flights))
+names(flight_type) = names(nycflights13::flights)
+
+for (i in names(nycflights13::flights)) {
+  flight_type[[i]] = class(nycflights13::flights[[i]])
+}
+
+flight_type
+```
+
+### c)
+```{r}
+#
+data("iris")
+iris_unique = vector("double", ncol(iris))
+names(iris_unique) = names(iris)
+
+for (i in names(iris)) {
+  iris_unique[i] = length(unique(iris[[i]]))
+}
+iris_unique
+```
+
+### d)
+```{r}
+#
+x = 10
+mean1 =  c(-10, 0, 10, 100)
+rand_norm = vector("list", length(mean1))
+
+for (i in seq_along(rand_norm)) {
+  rand_norm[[i]] = rnorm(x, mean = mean1[i])
+  }
+
+rand_norm
+```
+
+# Chapter 17 (Pgs. 328-329)
+
+##  Exercise 1
+
+### a)
+```{r}
+#
+map_dbl(mtcars, mean)
+```
+
+### b)
+```{r}
+#
+map_chr(nycflights13::flights, typeof)
+```
+
+### c)
+```{r}
+#
+map_int(iris, function(x) length(unique(x)))
+```
+
+### d)
+```{r}
+#
+map(c(-10, 0, 10, 100), ~rnorm(n = 10, mean = .))
+```
+
+# Chapter 18 (Pgs. 353-354)
+
+##  Exercise 1
+```{r}
+#
+sim1a <- tibble(x = rep(1:10, each = 3), y = x * 1.5 + 6 + rt(length(x), df = 2))
+
+ggplot(sim1a, aes(x = x, y = y)) + geom_point() + geom_smooth(method = "lm", se = FALSE)
+
+```
+
+Based on the simulations ran through the code above, there are no significant outliers in any of the generated plots and their slopes are pretty similar as well. 
+
+##  Exercise 2
+```{r}
+#
+measure_distance <- function(mod, data) {
+  diff <- data$y - make_prediction(mod, data)
+  mean(abs(diff))
+}
+
+make_prediction = function(mod, data) {
+  mod[1] + mod[2] * data$x
+}
+
+param = optim(c(0, 0), measure_distance, data = sim1a)
+param$par
+
+```

@@ -1,0 +1,196 @@
+---
+title: "Lab 2"
+author: "Ishaan Phadnis"
+date: "September 6, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Instructions
+
+**Exercises:**  1-3 (Pgs. 49-50); 2-4 (Pg. 51); 2,4 (Pg. 54); 1-4 (Pg. 58)
+
+**Submission:** Submit via an electronic document on Sakai. Must be submitted as a HTML file generated in RStudio. All assigned problems are chosen according to the textbook *R for Data Science*. You do not need R code to answer every question. If you answer without using R code, delete the code chunk. If the question requires R code, make sure you display R code. If the question requires a figure, make sure you display a figure. A lot of the questions can be answered in written response, but require R code and/or figures for understanding and explaining. 
+
+```{r, include=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(nycflights13)
+```
+
+# Chapter 3 (Pgs. 49-50)
+
+##  Exercise 1
+
+a)
+```{r}
+#
+filter(flights, arr_delay >= 120)
+```
+
+b)
+```{r}
+filter(flights, dest %in% c("IAH", "HOU"))
+```
+
+c) 
+```{r}
+flights
+
+filter(flights, carrier %in% c("AA", "DL", "UA"))
+```
+
+d)
+```{r}
+filter(flights, month %in% 7:9)
+```
+
+e)
+```{r}
+filter(flights, arr_delay > 120, dep_delay <= 0)
+```
+
+f)
+```{r}
+filter(flights, dep_delay >= 60, (dep_delay - arr_delay > 30))
+```
+
+g)
+```{r}
+filter(flights, dep_time >= 2400 | dep_time <= 600)
+```
+
+##  Exercise 2
+
+The 'between()' command is essentially used to more efficiently compute 'x >= left bound' & x <= right bound'. 
+```{r}
+#THIS IS NUMBER ONE, PART D, DONE USING THE BETWEEN COMMAND:
+
+filter(flights, between(month, 7, 9))
+
+```
+
+##  Exercise 3
+```{r}
+#THE 'na()' COMMAND IS USED TO FIND MISSING 'dep_time' VALUES:
+
+filter(flights, is.na(dep_time))
+
+filter(flights, is.na(dep_delay))
+
+filter(flights, is.na(arr_time))
+
+filter(flights, is.na(arr_delay))
+
+filter(flights, is.na(air_time))
+```
+
+There are 8255 flights that are missing a 'dep_time' value (8255 rows in data table above). There are also 8255 flights missing a `dep_delay` value, 8713 flights missing an `arr_time` value, 9430 flights missing an `arr_delay` value, 9430 flights missing an `air_time`value. These rows most likely represent flights that did not depart or arrive because a flight that departs and is then rerouted would have a recorded departure but it would not have a  similar record for it's arrival. 
+
+# Chapter 3 (Pg. 51)
+
+##  Exercise 2
+```{r}
+#
+arrange(flights, dep_delay)
+
+arrange(flights, desc(dep_delay))
+```
+
+##  Exercise 3
+```{r}
+#
+arrange(flights, air_time)
+```
+
+##  Exercise 4
+
+LONGEST: 
+```{r}
+#
+flights %>% arrange(-air_time) %>% select(carrier, flight, air_time)
+```
+
+SHORTEST: 
+```{r}
+#
+flights %>% arrange(air_time) %>% select(carrier, flight, air_time)
+```
+
+# Chapter 3 (Pg. 54)
+
+##  Exercise 2
+```{r}
+#
+select(flights, air_time, air_time)
+```
+
+Nothing happens when the name of a variable is included multiple times, it just returns it once. 
+
+##  Exercise 4
+```{r}
+#
+select(flights, contains("TIME"))
+```
+
+The results do surprise me a little. The reason why this occurs is because each of the 'select_helper()' functions, by default, ignore the cases of the variable. This can be changed by setting `ignore.case=FALSE` as shown below.
+
+```{r}
+select(flights, contains("TIME", ignore.case = FALSE))
+```
+
+# Chapter 3 (Pg. 58)
+
+##  Exercise 1
+```{r}
+#
+mutate(flights, 
+dep_time = (dep_time %/% 100) * 60 + (dep_time %% 100), sched_dep_time = (sched_dep_time %/% 100) * 60 + (sched_dep_time %% 100))
+```
+
+##  Exercise 2
+
+My expectation is that 'air_time()' is calculated by computing 'arr_time - dep_time'. The code below helps consider this expectation by converting the variables above into forms where operations can be done on them, and then testing my expectation:
+```{r}
+#CONVERSION OF VARIABLES
+flights_airtime <-
+mutate(flights,
+dep_time = (dep_time %/% 100 * 60 + dep_time %% 100) %% 1440, 
+arr_time = (arr_time %/% 100 * 60 + arr_time %% 100) %% 1440,
+air_time_diff = air_time - arr_time + dep_time)
+
+#EXPECTATION TESTED
+nrow(filter(flights_airtime, air_time_diff != 0))
+```
+
+Every flight should have a value of zero by solving the equation 'air_time = arr_time - dep_time'. However, thousands of flights as shown above do no fullfill this operation and the reason why most likely has to do with time zone issues with overnight flights. In order to fix this, all the flight times should be converted to a date-time form to handle overnight flights that cause time-zone conflicts. 
+
+##  Exercise 3
+
+Departure time, or 'dep_time()', is the time that a flight actually departs. Scheduled departure time, or 'sched_dep_time()', is the time that a flight is originally scheduled to depart. Departure delay, or 'dep_delay()', is the amount of time that a flight is delayed by. The relationship between these three variables is represented by the following equation: 'dep_time - sched_dep_time = dep_delay". The relationship is displayed through the code below: 
+
+```{r}
+#SAME PROCEDURE AS EXERCISE 2 (CONVERSION, THEN EXPECTATION TESTED)
+flights_deptime <-
+mutate(flights, dep_time_min = (dep_time %/% 100 * 60 + dep_time %% 100) %% 1440,
+sched_dep_time_min = (sched_dep_time %/% 100 * 60 + sched_dep_time %% 100) %% 1440,
+dep_delay_diff = dep_delay - dep_time_min + sched_dep_time_min)
+
+filter(flights_deptime, dep_delay_diff != 0)
+```
+
+
+##  Exercise 4
+```{r}
+#
+flights %>%
+  filter(min_rank(-(dep_delay)) %in% 1:10)
+
+flights %>%
+  top_n(10, dep_delay)
+```
+
+In order to handle ties, ranking functions are used as shown above through the 'min_rank()' function. 

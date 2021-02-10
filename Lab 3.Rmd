@@ -1,0 +1,137 @@
+---
+title: "Lab 3"
+author: "Ishaan Phadnis"
+date: "September 27, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Instructions
+
+**Exercises:**  1,3 (Pgs. 90-91); 1 (Pg. 93); 2,4 (Pg. 99); 1,2 (Pg. 101); 2,3,5 (Pg. 104)
+
+**Submission:** Submit via an electronic document on Sakai. Must be submitted as a HTML file generated in RStudio. All assigned problems are chosen according to the textbook *R for Data Science*. You do not need R code to answer every question. If you answer without using R code, delete the code chunk. If the question requires R code, make sure you display R code. If the question requires a figure, make sure you display a figure. A lot of the questions can be answered in written response, but require R code and/or figures for understanding and explaining.
+
+```{r, include=FALSE}
+library(tidyverse)
+```
+
+# Chapter 5 (Pgs. 90-91)
+
+##  Exercise 1
+```{r}
+#
+diamonds %>% gather(key = dist, vals, x, y, z) %>% ggplot(aes(vals, colour = dist)) + geom_freqpoly(bins = 20)
+```
+
+Some things that I noticed are: 
+  - x and y are larger than z and are pretty much the same
+  - x and y are most likely length/width, z is height
+  - there are outliers
+  - right skewed
+
+##  Exercise 3
+```{r}
+#
+
+diamonds %>% filter(carat == 0.99) %>% count()
+diamonds %>% filter(carat == 1) %>% count()
+ggplot(diamonds) + geom_histogram(aes(x = carat), binwidth = 0.01) + xlim(c(0.97, 1.03))
+
+```
+
+There are a lot more diamonds with 1 carat. The reason why is because 1 carat, for some perceptive reason, holds way more value than 0.99 carat. Therefore, a little extra material is used for much more value.
+
+# Chapter 5 (Pg. 93)
+
+##  Exercise 1
+
+```{r}
+nycflights13::flights %>% mutate( cancelled = is.na(dep_time), sched_hour = sched_dep_time %/% 100, sched_min = sched_dep_time %% 100, sched_dep_time = sched_hour + sched_min / 60) %>% ggplot(mapping = aes(sched_dep_time)) + geom_freqpoly(mapping = aes(color = cancelled), binwidth = 1/2)
+```
+
+For the histogram, the missing values leave a gap in the distribution. For the barplot, the function removes the `NA` value.
+
+# Chapter 5 (Pg. 99)
+
+##  Exercise 2
+```{r}
+#
+ggplot(diamonds) +  geom_point(aes(x = carat, y = price), color = "red", alpha = 1)
+
+ggplot(diamonds) + geom_point(aes(x = depth, y = price), color = "blue", alpha = 1)
+
+ggplot(diamonds) + geom_point(aes(x = table, y = price), color = "green", alpha = 1)
+
+ggplot(diamonds) + geom_point(aes(x = x, y = price), color = "black", alpha = 0.5)
+
+ggplot(diamonds) + geom_point(aes(x = z, y = price), color = "yellow", alpha = 1)
+```
+
+Volume and weight are the most important variables for predicting the price. Because volume and weight have a strong correlation, they can be considered as a single variable. A better cut has a lower carat, leading to a lower price. So if carat is not evaluated, better cut would seem to have a lower price. 
+
+##  Exercise 4
+```{r}
+#
+
+library(lvplot)
+ggplot(diamonds) + geom_lv(aes(x = cut, y = price))
+
+```
+
+This plot gives detailed description of the tails in a distribution. The plot also shows many quantiles as opposed to the boxplot, which shows less quantiles and outliers. 
+
+
+# Chapter 5 (Pg. 101)
+
+##  Exercise 1
+
+```{r}
+diamonds %>% count(color, cut) %>% group_by(color) %>% mutate(perc = n / sum(n)) %>% ggplot(aes(color, cut, fill = perc)) + geom_tile()
+```
+
+The count dataset can be rescaled to more clearly show
+the distribution of cut within color, or color within cut by calculating the percentages and also showing the n.
+
+##  Exercise 2
+
+```{r}
+
+library("nycflights13")
+flights %>% group_by(month, dest) %>% summarise(dep_delay = mean(dep_delay, na.rm = TRUE)) %>% ggplot(aes(x = factor(month), y = dest, fill = dep_delay)) + geom_tile() + labs(x = "Month", y = "Dest", fill = "Dep Delay")
+```
+
+One thing that makes the plot difficult to read is that it is hard to see differences in 'dep_delay' because the higher values are pushing the whole color palette upwards. Another reason why it is difficult to read is because a lot destinations are missing values for some months. One way the plot can be improved is by excluding destinations with missing values.
+
+# Chapter 5 (Pg. 104)
+
+##  Exercise 2
+```{r}
+#
+
+diamonds %>% ggplot() + geom_density(mapping = aes(x = carat,      color = cut_width(price, 2000, boundary = 0)))
+
+```
+
+##  Exercise 3
+```{r}
+#
+
+diamonds %>% ggplot + geom_boxplot(mapping = aes(x = cut_number(carat, 5), y = price)) + coord_flip()
+
+```
+
+The price distribution of very large diamonds has much more variability than the smaller diamonds. The reason why may be due to the influence of other factors, such as cut, clarity, and color. 
+
+##  Exercise 5
+```{r}
+#
+
+ggplot(data = diamonds) + geom_point(mapping = aes(x = x, y = y)) + coord_cartesian(xlim = c(4, 10), ylim = c(4, 11))
+
+```
+
+The reason why the scatterplot is a better diplay is because we can identify the outliers and at the same time observe the strong, positive correlation between x and y.

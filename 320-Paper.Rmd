@@ -1,0 +1,737 @@
+---
+title: "Final Paper"
+author: "STOR 320.02 Group 5"
+date: "December 5, 2019"
+output: html_document
+---
+
+```{r,echo=F,message=F,warning=F}
+knitr::opts_chunk$set(echo = FALSE)
+library(ggpubr)
+library(lubridate,quietly =T)
+library(readr,quietly=T)
+library(MASS,quietly=T)
+library(class,quietly=T)
+library(dplyr,quietly=T)
+library(ggplot2,quiet=T)
+library(tidyverse,quietly=T)
+library(psych,quietly=T)
+library(vcd,quietly=T)
+library(modelr,quietly=T)
+library(gridExtra,quietly=T)
+library(party,quietly=T)
+library(rpart,quietly=T)
+library(rpart.plot,quietly=T)
+library(xtable,quietly=T)
+library(ggpubr)
+library(lubridate,quietly =T)
+library(readr,quietly=T)
+library(MASS,quietly=T)
+library(class,quietly=T)
+library(dplyr,quietly=T)
+library(ggplot2,quiet=T)
+library(tidyverse,quietly=T)
+library(psych,quietly=T)
+library(vcd,quietly=T)
+library(modelr,quietly=T)
+library(gridExtra,quietly=T)
+library(party,quietly=T)
+library(rpart,quietly=T)
+library(rpart.plot,quietly=T)
+library(knitr)
+
+library(data.table)
+library(base)
+
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+#install.packages("psych")
+#install.packages("vcd")
+#install.packages("modelr")
+#install.packages("gridExtra")
+#install.packages("caret")
+library(psych)
+library(vcd)
+library(modelr)
+library(gridExtra)
+#library(caret)
+
+
+# Import Data Below
+data = read.csv("C://Users//ishaan14//Downloads//shot_logs.csv")
+position=read.csv("C://Users//ishaan14//Downloads//players_stats.csv")
+
+shooter = read.csv("C://Users//ishaan14//Downloads//newDataSet.csv",header=T)
+library(data.table)
+library(base)
+
+nba = data
+nbaTest = data
+
+nbaTest$player_name <- gsub("steve adams", "steven adams", nbaTest$player_name)
+nbaTest$player_name <- gsub("dwayne wade", "dwyane wade", nbaTest$player_name)
+nbaTest$player_name <- gsub("alan crabbe", "allen crabbe", nbaTest$player_name)
+nbaTest$player_name <- gsub("jon ingles", "joe ingles", nbaTest$player_name)
+nbaTest$player_name <- gsub("jimmer dredette", "jimmer fredette", nbaTest$player_name)
+nbaTest$player_name <- gsub("mnta ellis", "monta ellis", nbaTest$player_name)
+nbaTest$player_name <- gsub("jose juan barea", "j.j. barea", nbaTest$player_name)
+nbaTest$player_name <- gsub("dirk nowtizski", "dirk nowitzki", nbaTest$player_name)
+nbaTest$player_name <- gsub("danilo gallinai", "danilo gallinari", nbaTest$player_name)
+nbaTest$player_name <- gsub("nerles noel", "nerlens noel", nbaTest$player_name)
+nbaTest$player_name <- gsub("beno urdih", "beno udrih", nbaTest$player_name)
+nbaTest$player_name <- gsub("otto porter", "otto porter jr.", nbaTest$player_name)
+nbaTest$player_name <- gsub("nene hilario", "nene", nbaTest$player_name)
+nbaTest$player_name <- gsub("al farouq aminu", "al-farouq aminu", nbaTest$player_name)
+nbaTest$player_name <- gsub("kyle oquinn", "kyle o'quinn", nbaTest$player_name)
+nbaTest$player_name <- gsub("cj watson", "c.j. watson", nbaTest$player_name)
+nbaTest$player_name <- gsub("oj mayo", "o.j. mayo", nbaTest$player_name)
+nbaTest$player_name <- gsub("amare stoudemire", "amar'e stoudemire", nbaTest$player_name)
+nbaTest$player_name <- gsub("time hardaway jr", "tim hardaway jr.", nbaTest$player_name)
+nbaTest$player_name <- gsub("james ennis", "james ennis iii", nbaTest$player_name)
+nbaTest$player_name <- gsub("dj augustin", "d.j. augustin", nbaTest$player_name)
+
+
+nba = nbaTest
+
+#Lower the case of position
+position$Name = tolower(position$Name)
+
+#left join the position for shooter
+nba_position=left_join(nba,position,by=c("player_name"="Name"))
+nba_position=nba_position%>%
+select(c(seq(1,21,1),Pos))%>%
+rename("Shooter_pos"="Pos")
+#Rename the Name of defender
+nba_position$CLOSEST_DEFENDER=as.character(nba_position$CLOSEST_DEFENDER)
+strReverse <- function(x)
+sapply(lapply(strsplit(x, ","), rev), paste, collapse = " ")
+nba_position$CLOSEST_DEFENDER=strReverse(nba_position$CLOSEST_DEFENDER)
+nba_position$CLOSEST_DEFENDER=tolower(nba_position$CLOSEST_DEFENDER)
+nba_position$CLOSEST_DEFENDER=substr(nba_position$CLOSEST_DEFENDER, 2, 100)
+
+nbaTest = nba_position
+# Fix the errors
+nbaTest$CLOSEST_DEFENDER <- gsub("a.j. price", "aj price", nbaTest$CLOSEST_DEFENDER)
+nbaTest$CLOSEST_DEFENDER <- gsub("charles hayes", "chuck hayes", nbaTest$CLOSEST_DEFENDER)
+nbaTest$CLOSEST_DEFENDER <- gsub("cj watson", "c.j. watson", nbaTest$CLOSEST_DEFENDER)
+nbaTest$CLOSEST_DEFENDER <- gsub("ene", "nene", nbaTest$CLOSEST_DEFENDER)
+nbaTest$CLOSEST_DEFENDER <- gsub("glenn robinson", "glenn robinson iii", nbaTest$CLOSEST_DEFENDER)
+nbaTest$CLOSEST_DEFENDER <- gsub("j.r. smith", "jr smith", nbaTest$CLOSEST_DEFENDER)
+nbaTest$CLOSEST_DEFENDER <- gsub("james ennis", "james ennis iii", nbaTest$CLOSEST_DEFENDER)
+nbaTest$CLOSEST_DEFENDER <- gsub("jeff taylor", "jeffery taylor", nbaTest$CLOSEST_DEFENDER)
+nbaTest$CLOSEST_DEFENDER <- gsub("johnny o'bryant", "johnny o'bryant iii", nbaTest$CLOSEST_DEFENDER)
+nbaTest$CLOSEST_DEFENDER <- gsub("jose juan barea", "j.j. barea", nbaTest$CLOSEST_DEFENDER)
+nbaTest$CLOSEST_DEFENDER <- gsub("larry drew", "larry drew ii", nbaTest$CLOSEST_DEFENDER)
+nbaTest$CLOSEST_DEFENDER <- gsub("nenes kanter", "enes kanter", nbaTest$CLOSEST_DEFENDER)
+nbaTest$CLOSEST_DEFENDER <- gsub("otto porter", "otto porter jr.", nbaTest$CLOSEST_DEFENDER)
+nbaTest$CLOSEST_DEFENDER <- gsub("perry jones", "perry jones iii", nbaTest$CLOSEST_DEFENDER)
+nbaTest$CLOSEST_DEFENDER <- gsub("glen rice jr.", "glen rice", nbaTest$CLOSEST_DEFENDER)
+
+nba_position = nbaTest
+#left join the position for defender
+nba_position=left_join(nba_position,position,by=c("CLOSEST_DEFENDER"="Name"))
+nba_position=nba_position%>%
+select(c(seq(1,22,1),Pos))%>%
+rename("Defender_pos"="Pos")
+
+#head(nba_position)
+#messups = nba_position %>%
+#  group_by(CLOSEST_DEFENDER_PLAYER_ID) %>%
+#  select(c(CLOSEST_DEFENDER, Shooter_pos, Defender_pos, player_id)) %>%
+#  
+#  subset(Defender_pos == "" | is.na(Defender_pos)) %>%
+#  arrange(CLOSEST_DEFENDER)
+#View(messups)
+data = nba_position  %>%
+  rename("FGM"="FGM.x") %>%
+  rename("PTS"="PTS.x")
+
+position = read.csv("C://Users//ishaan14//Downloads//newDataSet.csv")
+position$Player = tolower(position$Player)
+#position
+#str = gsub("([\\])","", str)
+subs = substring(position$Player, regexpr("([\\])", position$Player))
+for (i in 1:nrow(position)) {
+  position$Player[i] = substring(position$Player[i], 0, nchar(position$Player[i]) - nchar(subs[i]))
+}
+
+dat = data
+# Gives most of the important stuff
+bestDefender = dat %>%
+  #select(c(FGM, CLOSEST_DEFENDER, SHOT_DIST, CLOSE_DEF_DIST, PTS, SHOT_DIST, PTS_TYPE, Defender_pos)) %>%
+  arrange(CLOSEST_DEFENDER, FGM) %>%
+  group_by(CLOSEST_DEFENDER, Defender_pos) %>%
+  summarise(oppFGP = mean(FGM), oppShots = n(), distFromMan = mean(CLOSE_DEF_DIST), pointsPerShot = mean(PTS), basketDist = mean(SHOT_DIST), ) %>%
+  subset(oppShots > 250) %>%
+  
+#subset(CLOSEST_DEFENDER == "Leonard, Kawhi" | CLOSEST_DEFENDER == "Green, Draymond" | CLOSEST_DEFENDER == "Jordan, DeAndre" | CLOSEST_DEFENDER == "Davis, Anthony" | CLOSEST_DEFENDER == "Gobert, Rudy" | CLOSEST_DEFENDER == "Bogut, Andrew" | CLOSEST_DEFENDER == "Allen, Tony" | CLOSEST_DEFENDER == "Duncan, Tim" | CLOSEST_DEFENDER == "Kidd-Gilchrist, Michael" | CLOSEST_DEFENDER == "Butler, Jimmy" | CLOSEST_DEFENDER == "Gasol, Marc" | CLOSEST_DEFENDER == "Noah, Joakim" | CLOSEST_DEFENDER == "Ariza, Trevor" | CLOSEST_DEFENDER == "James, LeBron" | CLOSEST_DEFENDER == "Beverley, Patrick" | CLOSEST_DEFENDER == "Carroll, DeMarre" | CLOSEST_DEFENDER == "Noel, Nerlens" | CLOSEST_DEFENDER == "Paul, Chris" | CLOSEST_DEFENDER == "Whiteside, Hassan") %>%
+  #arrange(oppFGP, pointsPerShot)
+  arrange(pointsPerShot)
+#bestDefender
+
+best3PointDefenders = dat %>%
+  #select(c(FGM, CLOSEST_DEFENDER, SHOT_DIST, CLOSE_DEF_DIST, PTS, SHOT_DIST, PTS_TYPE, player_name, Defender_pos)) %>%
+  arrange(CLOSEST_DEFENDER, FGM) %>%
+  group_by(CLOSEST_DEFENDER, Defender_pos) %>%
+  subset(PTS_TYPE == 3) %>%
+  summarise(threePointPer = mean(FGM), numThrees = n()) %>%
+  arrange(threePointPer)
+  #subset(CLOSEST_DEFENDER == "Leonard, Kawhi" | CLOSEST_DEFENDER == "Green, Draymond" | CLOSEST_DEFENDER == "Jordan, DeAndre")
+#best3PointDefenders
+
+best2PointDefenders = dat %>%
+  #select(c(FGM, CLOSEST_DEFENDER, SHOT_DIST, CLOSE_DEF_DIST, PTS, SHOT_DIST, PTS_TYPE, player_name, Defender_pos)) %>%
+  arrange(CLOSEST_DEFENDER, FGM) %>%
+  group_by(CLOSEST_DEFENDER, Defender_pos) %>%
+  subset(PTS_TYPE == 2) %>%
+  summarise(twoPointPer = mean(FGM), numTwos = n()) %>%
+  #subset(CLOSEST_DEFENDER == "Leonard, Kawhi" | CLOSEST_DEFENDER == "Green, Draymond" | CLOSEST_DEFENDER == "Jordan, DeAndre") %>%
+  #subset(twoPointPer < .4458205) %>%
+  arrange(twoPointPer)
+#best2PointDefenders
+
+
+bestDefender = left_join(bestDefender, best2PointDefenders, by=c("CLOSEST_DEFENDER"))
+bestDefender = left_join(bestDefender, best3PointDefenders, by=c("CLOSEST_DEFENDER"))
+#bestDefender %>%
+#  select(CLOSEST_DEFENDER, Defender_pos, pointsPerShot, oppFGP, oppShots, twoPointPer, numTwos, threePointPer, numThrees, distFromMan, basketDist)
+
+#bestDefender
+
+#View(data)
+newDat = left_join(bestDefender,position,by=c("CLOSEST_DEFENDER"="Player"))
+#newDat
+newDat$DWS48 = (newDat$DWSâ../ ((newDat$MP)/48))
+newDat$OWS48 = (newDat$OWS / ((newDat$MP)/48))
+newDat$WS48 = (newDat$WS / ((newDat$MP)/48))
+
+bestDefender = newDat
+  
+copy = bestDefender %>%
+  arrange(desc(DWS48))
+
+copy$rankDWS48 = 0
+for (i in 1:nrow(copy)) {
+  copy[i,]$rankDWS48 = i
+}
+  
+
+modNoBlocks = lm(data = copy, rankDWS48~oppFGP+pointsPerShot+threePointPer+twoPointPer)
+#modNoBlocks
+NoBlocks = copy %>%
+  mutate(newRank = -770.8*oppFGP + 725.7*pointsPerShot + threePointPer*-204.8 + twoPointPer*201.6) %>%
+  arrange(newRank) %>%
+  select(CLOSEST_DEFENDER, Defender_pos.x, rankDWS48)
+WithBlocks = copy %>%
+  mutate(newRank = -141.120*oppFGP + 346.513*pointsPerShot+ STL.*-36.363 + BLK.*-6.591 + DRB.*-5.115) %>%
+  arrange(newRank) %>%
+  select(CLOSEST_DEFENDER, Defender_pos.x, rankDWS48)
+```
+
+# INTRODUCTION
+
+ 
+The NBA is one of the most popular sports leagues in the world, and continues to grow in popularity each year. Beyond the excitement that the league brings to its fans through the game of basketball, one of the more unique aspects of the association is the extent to which analytics drive the league. This is to say that the NBA has a wealth of statistics and analytics to offer.  Because of this, we knew that an NBA-related dataset would offer us interesting questions to explore through the analysis of different aspects of said data. Ultimately, we decided to work with a dataset that contained the shot analytics for many of the shots taken throughout the 2014-2015 NBA season. Through our research and analysis of this dataset and its variables, we were able to formulate two overarching questions that we found to be significant towards the data.  
+
+The first question we formulated was whether or not we could accurately predict a player’s defensive impact based on the shooting statistics of the players which they guard. Although our data set is simply the shot attempts made during the 2014-2015 season, which initially appears to be relevant mainly to the offense of a player/team, there is one column in the data set which sparked our curiosity. For each shot attempt, the closest defender is listed. Defense is a notoriously difficult factor to gauge based on quantitative data, and it seemed as if we were even more limited by our data not including the most commonly used defensive stats. Many of the most important things that players do which gains them the reputation of being a great defender do not show up on the stat sheet - the intensity they bring, their ability to guard a multitude of positions, etc. Thus, we set out to determine whether this information would offer us a good estimation of who the best defenders were. As defense is so difficult to gauge with just a single stat, we used two ways to test how good our prediction was - the Defensive Win Shares of a player, and their ranking in the Defensive Player Of The Year voting. These were used because they are the two best single stat predictors of how good a player is on defense, and using the Defensive Win Shares statistic is necessary, as the Defensive Player Of The Year voting only includes the top 19 vote receiving players.
+
+The second question that we came up with was centered around predicting the outcome of a shot.  One of the most interesting trends that came out of our preliminary exploration of the data was that shot success appeared to increase in likelihood as defenders got closer to the offensive player.  Since this seemed to go against our intuitions in a surprising way, we decided to dive deeper into this phenomena to see if it was indeed true, and, on the chance that this was a mistake - what are the best indicators for predicting the success of a shot?  We assume that we live in a world of randomness, and we certainly do, but the extent to which we can predictively model the randomness around us is always an interesting endeavor.  The NBA is no exception to this, and there are real world incentives for executives and owners within the league to understand the intricacies of what makes a shot most likely to be successful, thus resulting in the best chance of winning each game.  The NBA is a business at the end of the day - there is money at stake and both teams and individual players stand to profit by better understanding the predictors of successful shooting. 
+
+The following paper is our best attempt at sharing our findings with the reader.  As analytics continue to grow as a productive weapon in sports, we hope to see research like this expanded on. Understanding these metrics on a fundamental level can really be the difference between a win and a loss at the end of the day.  In baseball, detailed by the movie Moneyball, the Oakland A’s transformed the league through using Sabermetrics to find the best players for bargain deals, ultimately resulting in record win streaks for the team.  There is no reason similar metrics can’t make large waves within the NBA.  Should the NBA happen to stumble across this, we are more than open to continuing our research at a reasonable rate.    
+
+
+
+
+# DATA
+
+The data that we used was from a dataset uploaded by data scientist Dan Becker on Kaggle in 2016. The dataset is called “NBA shot logs” (shot_logs.csv), which in short is described as “Moneyball data, for basketball”.  The shot logs were scraped using the NBA’s REST API, and they contain all of the shots from about 75% of the games played in the 2014-2015 NBA season. This is more than sufficient for the questions that we wanted to explore, since neither of them were focused on using cumulative totals.  Let’s look a little deeper into the data.
+
+As mentioned earlier the dataset was incomplete.  That being said, the remaining 75% we had provided us with 128,069 observations - more than enough for our research. Altogether, there were 16 variables for each observation (or shot) in our data set but there are 8 in particular that we utilized to answer our questions:
+
+- SHOT_DIST: the distance of each individual shot that a player takes (in feet)
+- PTS_TYPE: was the shot a 2 pointer, or 3 pointer
+- SHOT_RESULT: outcome of the shot (make or miss)
+- CLOSEST_DEFENDER: who was the closest defender to the person taking the shot (name)
+- CLOSE_DEF_DIST: how far is the closest defender from the person taking the shot (in feet)
+- FGM: does the player make the field goal (shot), 1 if the shot is goes in & 0 if not
+- PTS: how many points does the player earn from the shot (2 or 3) 
+- player_name: the name of the player who took the shot  
+
+The figure below attempts to visually aggregate every shot in our dataset.
+
+
+
+```{r, message=FALSE, warning=FALSE}
+
+nba=read.csv("C://Users//ishaan14//Downloads//shot_logs.csv",header=T)
+position=read.csv("C://Users//ishaan14//Downloads//players_stats.csv",header=T)
+shooter = read.csv("C://Users//ishaan14//Downloads//newDataSet.csv",header=T)
+
+
+shooter$Player = tolower(shooter$Player)
+
+subs = substring(shooter$Player, regexpr("([\\])", shooter$Player))
+for (i in 1:nrow(shooter)) {
+  shooter$Player[i] = substring(shooter$Player[i], 0, nchar(shooter$Player[i]) - nchar(subs[i]))
+}
+
+shot_player=left_join(nba,shooter,by=c("player_name"="Player"))
+shot_player=shot_player%>%
+  select(-c(X,X.1))
+
+
+shot_player$GAME_CLOCK = as.numeric(as.period(ms(shot_player$GAME_CLOCK), unit = "sec"))
+
+
+
+
+getmode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+table23=shot_player%>%
+  select(FGM,PTS_TYPE)%>%
+  group_by(FGM,PTS_TYPE)%>%
+  summarize(n=n())
+
+table23_2=xtabs(n~PTS_TYPE+FGM,table23)
+mosaic(table23_2, shade=TRUE, legend=TRUE,main="Points Type vs FGM")
+
+
+kk=xtable(shot_player)
+library(htmlTable)
+htmlTable(kk)
+```
+
+
+For question one, we decided to subset the data set to only include players that were listed as the closest defender for at least 250 shots or more.  We did not want to see a player who played perfect defense for one total possession be the best defender, and this subsetting was a preventative measure for that. This took our sample to about 240 players.  Commonly used defensive metrics - blocks, steals, and defensive rating - were not provided in this data set. Thus, we wanted to see how accurately we could find the best defenders in the league based off the above shot statistics alone. The only defensive indicator in the shot logs was the CLOSEST_DEFENDER column, which we used to identify defensive players and their offensive counterparts. From this we were able to frame offensive stats to reflect defense.  For example, rather than attribute each made shot to an offensive player, we attributed each missed shot to the closest defender. It is worth noting that a player only makes an appearance in the CLOSEST_DEFENDER column if they are the closest player on the opposing team when a shot attempt is made. The implication here is that if a defender gets blown by as a shooter drives towards the basket, and someone closer to the basket helps, the defensive help will be attributed with the CLOSEST_DEFENDER, rather than the player who was blown by.  In other words, a player’s poor defense in this scenario would not be reflected by our data, and someone else would be burdened with their mistake.  This is something to keep in mind.
+
+Question one also required a merge with a new data set containing the statistics for each player during the 2014-2015 season.  This dataset was the 2014-15 NBA Advanced statistics from basketball-reference.com.  Most important among the metrics in this data set is the DWS column.  As a benchmark for accuracy, we used Defensive Win Shares (DWS), which is commonly regarded as the best single stat to determine how much impact a player makes defensively. In our analysis, we regard it as a comparative ranking for determining the best defender. Though DWS is not a perfect metric, defensive impact is very difficult to quantify, and DWS does the best job at estimating the best defenders.
+
+From this new data set we used:
+
+- BLK: Percentage of plays in which a player recorded a block on a shot
+- STL: Percentage of plays in which a player recorded a steal
+- DREB: Average number of defensive rebounds a player recorded each game
+- DWS: The Defensive Win Shares of a player, where 1 DWS is equivalent to 1 added win to the player’s teams record
+- MP: Total number of minutes that a player was on the floor. This statistic was necessary to determine the DWS per 48
+
+Question two also utilized the merged dataset containing further information for each player during the 2014-2015 season:
+
+- POS: The position of a player on the court
+- Age: The age of a player
+- PER: The Player Efficiency Rating, a statistic the attempts to boil down all of a player’s contributions to one number.
+
+
+# RESULTS
+
+
+In this question we want to see how effective an estimation of the best defenders in the league based solely on shooting statistics is. As mentioned earlier, DWS is a calculation of how much a player contributed on defense - 1 DWS is equivalent to 1 win that a defensive player adds to a team’s record. With that being said, DWS is biased towards those who play more games.  To curtail this bias, we ranked players based on their defensive win shares per 48 minutes played, which was calculated using their DWS and their total minutes played. As a quick check, we tested DWS per 48 against the defensive player of the year candidates list, and 7 of the top 8 candidates are within the top 10. From this, we assume that defensive player of the year awards are calculated and voted for at least semi fairly.
+
+We created the first model based on the defenders opposing field goal percentage, two point percentage, three point percentage, and average points per shot, as these were the four most important statistics observed through linear modeling. However, in this model there was significant overlap between two point field goal percentage and three point field goal percentage, so the model was based primarily on overall field goal percentage and average points per shot.
+
+
+```{r}
+plot(rankDWS48~1, data = NoBlocks, xlim=c(1, 210))
+```
+
+(Figure 1.1: Prediction of defensive win shares per 48 based solely on defensive shooting statistics)
+
+In this model, only 3 of the top 10 dpoy candidates are within the top 10, and only 3 of the top 10 DWS per 48 players are in the top 10.  This is clearly not a good model.
+
+Since the first model lacked accuracy, we sought improvement by supplementing it with more commonly used defensive metrics such as steals, blocks, and rebounds. We then created a new linear model including these in addition to our previous predictors.  The resulting, more accurate prediction plot is shown below in Figure 1.2.
+
+
+```{r}
+plot(rankDWS48~1, data = WithBlocks, xlim=c(1, 210))
+```
+
+
+(Figure 1.2: Prediction of defensive win shares per 48 based on defensive metrics as well as defensive shooting statistics)
+ 
+By adding the top 19 defensive player of the year candidates to our data, we get the table shown in Figure 1.3 as our final estimation of who the best defenders in the league are. In this model, each of the top 8 dpoy candidates are within the top 10, and 7 of the top 10 players in terms of their rank in DWS per 48 are in the top 10.
+
+```{r}
+copy = WithBlocks
+copy$dpoyrank = NA
+
+copy[, 4][copy[1] == "kawhi leonard"] = 1
+copy[, 4][copy[1] == "draymond green"] = 2
+copy[, 4][copy[1] == "deandre jordan"] = 3
+copy[, 4][copy[1] == "anthony davis"] = 4
+copy[, 4][copy[1] == "rudy gobert"] = 5
+copy[, 4][copy[1] == "andrew bogut"] = 6
+copy[, 4][copy[1] == "tony allen"] = 7
+copy[, 4][copy[1] == "tim duncan"] = 8
+copy[, 4][copy[1] == "michael kidd-gilchrist"] = 9
+copy[, 4][copy[1] == "jimmy butler"] = 10
+copy[, 4][copy[1] == "marc gasol"] = 11
+copy[, 4][copy[1] == "joakim noah"] = 12
+copy[, 4][copy[1] == "trevor ariza"] = 13
+copy[, 4][copy[1] == "lebron james"] = 14
+copy[, 4][copy[1] == "patrick beverley"] = 15
+copy[, 4][copy[1] == "demarre carroll"] = 16
+copy[, 4][copy[1] == "nerlens noel"] = 17
+copy[, 4][copy[1] == "chris paul"] = 18
+copy[, 4][copy[1] == "hassan whiteside"] = 19
+#head(copy, n = 10)
+library(xtable)
+library(htmlTable)
+htmlTable(head(copy, n = 10))
+```
+
+(Figure 1.3: Our final estimation of the best defenders in the league)
+ 
+As a check to see how relevant the statistics which we calculated were to the model, we created a third model in which we only included steals, blocks, and rebounds as predictors of defensive win shares. This model included 6 of the top 10 players in terms of DWS per 48 and 5 of the top 10 defensive player of the year candidates within its top 10. This model was still quite effective in predicting the defensive metrics, but our model does improve the accuracy of the prediction significantly. We were able to conclude from this that the inclusion of defensive metrics in addition to defensive shooting statistics significantly improves the prediction of defensive win shares for DPOY. Solely basing the model on defensive shooting statistics does not give an accurate prediction of the best defenders, and solely basing the model on defensive metrics gives a less effective prediction of the best defenders than the combination of both.
+
+
+To begin our analysis of question 2, we plotted Field Goal Percentage (FGP) against the Closest Defender Distance (CDD) and saw a weak negative correlation.
+
+```{r, message=FALSE, warning=FALSE}
+dat = nba
+defDist = dat %>%
+  select(CLOSE_DEF_DIST, FGM) %>%
+  group_by(CLOSE_DEF_DIST) %>%
+  filter(!is.na(CLOSE_DEF_DIST)) %>%
+  summarize(fgp = mean(FGM), n = n()) %>%
+  subset(n > 25 & CLOSE_DEF_DIST < 8)
+
+defDist2 = dat %>%
+  select(CLOSE_DEF_DIST, FGM,PTS_TYPE) %>%
+  subset(PTS_TYPE==2)%>%
+  group_by(CLOSE_DEF_DIST) %>%
+  filter(!is.na(CLOSE_DEF_DIST)) %>%
+  summarize(fgp = mean(FGM), n = n()) %>%
+  subset(n > 25 & CLOSE_DEF_DIST < 8)
+
+defDist3 = dat %>%
+  select(CLOSE_DEF_DIST, FGM,PTS_TYPE) %>%
+  subset(PTS_TYPE==3)%>%
+  group_by(CLOSE_DEF_DIST) %>%
+  filter(!is.na(CLOSE_DEF_DIST)) %>%
+  summarize(fgp = mean(FGM), n = n()) %>%
+  subset(n > 25 & CLOSE_DEF_DIST < 8)
+
+g1=ggplot(defDist,aes(x=CLOSE_DEF_DIST,y=fgp,color=n))+
+   scale_color_gradient(low="grey", high="blue")+
+  geom_smooth(span=1.5)+
+  geom_point()+
+  ggtitle("FieldGoalPercentage VS ClosestDefenderDistance")
+
+g2=ggplot(defDist2,aes(x=CLOSE_DEF_DIST,y=fgp,color=n))+
+   scale_color_gradient(low="pink", high="red")+
+  geom_smooth(span=1.5)+
+  geom_point()+
+  ggtitle("2Pts Shots")
+
+g3=ggplot(defDist3,aes(x=CLOSE_DEF_DIST,y=fgp,color=n))+
+  scale_color_gradient(low="pink", high="red")+
+  geom_smooth(span=1.5)+
+  geom_point()+
+  ggtitle("3Pts Shots")
+a = ggarrange(g2, g3 + font("x.text", size = 10), ncol = 2, nrow = 1)
+ 
+
+suppressMessages(print(g1))
+
+
+```
+```{r, message=FALSE, warning=FALSE}
+position_matrix=data.frame(PG=ifelse(shot_player$Pos=="PG",1,0),
+                       C=ifelse(shot_player$Pos=="C",1,0),
+                       PF =ifelse(shot_player$Pos=="PF",1,0),
+                       SF=ifelse(shot_player$Pos=="SF",1,0))
+
+shot_player_VS=shot_player%>%
+  select(FGM,LOCATION,FINAL_MARGIN,PERIOD,GAME_CLOCK,SHOT_CLOCK,DRIBBLES,TOUCH_TIME,SHOT_DIST,PTS_TYPE,Pos,Age,PER)%>%
+  mutate(LOCATION=ifelse(LOCATION=="A",1,0))%>%
+  mutate(PG=position_matrix$PG,C=position_matrix$C,PF=position_matrix$PF,SF=position_matrix$SF)%>%
+  select(-Pos)
+
+shot_player_VS=na.omit(shot_player_VS)
+```
+It seemed that the data showed that the further a defender was, the less likely it was for a player to make a shot. This was counterintuitive to our knowledge of the game as intuitively it should be easier to make a basket if the defender is further away. Thus, we decided to group our data by whether the shot was a 2pt attempt or a 3pt attempt. We then plotted these against the CDD.
+
+```{r, message=FALSE, warning=FALSE}
+suppressMessages(print(a))
+```
+
+
+These figures indicated the exact opposite of our initial analysis. As you can see, both figures indicate a positive correlation, meaning that the further a defender is, the more likely it is for a shot to have been made. Upon further research we found that this phenomenon where a trend/relationship exists in individual groups of data but disappears when these groups are combined is called Simpson’s Paradox. In relation to the data we used for our second question, when opponent field goal percentage for 2 point shots is separated from opponent field goal percentage for 3 point shots, both individual groups of data appear to have a positive correlation between the variables. However, when 2 point and 3 point shots are combined as one variable into one overarching set of data, there is no strong relationship in the combined data. This paradox is caused by the fact that the average FGP are different for 2pt and 3pt shots and thus we end up with a merged dataset with no strong relationship between the variables. Therefore, we continue to analyze our data in these two separate groups.
+
+
+Now looking at these two figures, we see that the field goal percentage is higher on average for 2pt shots than 3pt shots. This intuitively makes sense as 2pt shots are easier to make than 3pt shots because the shot for 2pts is taken much closer to the basket and thus is easier to make. We also see that the correlation between CDD and FGP is much stronger for a 3pt shots than for 2pt shots. The reason this is likely true is due to the fact that the closer you get to the basket, the more congested the defense gets.  This is to say that it is much more likely that a defensive breakdown would lead to a wide open 3pt shot than a wide open 2 point shot.  Even for 2pt shots that are considered “wide open”, there is a strong likelihood that *somebody* will be close to the shooter, yet this closeness is much different in nature than with a 3pt shot.  In short, a defender two feet away near the basket has much less impact on a shot than a defender 2 feet away from someone on the three point line.  This is the most likely explanation for why there is less of a correlation for 2pt shots.
+
+We found that this paradox was interesting especially given the fact that the strength of correlation for 2pt shots and 3pt shots are different, so we wanted to further this analysis by seeing what other variables contribute to the differences in FGP for the different shots and to eventually create a model to attempt to predict the result of any given shot.
+
+To progress in our analysis, we merged our existing dataset with another dataset to include more variables (POS, PER, and Age) as detailed in the Data section. One of these variables, position, was not a numeric variable and thus we converted it into a numeric variable using a four column 0-1 matrix so that we could perform logistic regression. 
+
+```{r, message=FALSE, warning=FALSE}
+confusion <- function(yhat, y, quietly = T){
+if(!quietly)
+message("Confusion matrix for ", title, ", yhat is the vector of predicted outcomes, possibly a factor.\n
+Sensitivity = (first level predicted) / (first level actual) \n
+Specificity = (second level predicted) / (second level actual)")
+if(!is.factor(y) & is.factor(yhat))
+y <- as.factor(y)
+confusion_mat <- table(yhat, y, deparse.level = 2)
+stats <- data.frame(sensitivity = round(confusion_mat[2, 2]/sum(confusion_mat[, 2]),3),
+specificity = round(confusion_mat[1, 1]/sum(confusion_mat[, 1]),3))
+return(stats = stats)}
+
+#Split the data into training and testing
+shot_player2=shot_player_VS%>%
+  subset(PTS_TYPE==2)%>%
+  select(-PTS_TYPE)
+
+smp_size <- floor(0.75 * nrow(shot_player2))
+set.seed(123)
+train_ind <- sample(seq_len(nrow(shot_player2)), size = smp_size)
+train2 <- shot_player2[train_ind, ]
+test2 <- shot_player2[-train_ind, ]
+
+
+mod2_glm=glm(FGM~.,data=train2,family = "binomial")
+
+
+pre2_glm=predict.glm(mod2_glm,test2,se.fit = F,interval = "prediction",type="response")
+pre2_glm=ifelse(pre2_glm>=0.5,1,0)
+test2=test2%>%
+  mutate(prediction=pre2_glm,correct_pre=ifelse(pre2_glm==FGM,1,0))
+
+table2=test2%>%
+  select(prediction,FGM)%>%
+  group_by(prediction,FGM)%>%
+  summarize(n=n())
+table2_2=xtabs(n~FGM+prediction,table2)
+
+shot_player3=shot_player_VS%>%
+  subset(PTS_TYPE==3)%>%
+  select(-PTS_TYPE)
+
+smp_size <- floor(0.75 * nrow(shot_player3))
+set.seed(10)
+train_ind <- sample(seq_len(nrow(shot_player3)), size = smp_size)
+train3 <- shot_player3[train_ind, ]
+test3 <- shot_player3[-train_ind, ]
+
+
+mod3_glm=glm(FGM~.,data=train3,family = "binomial")
+
+
+pre3_glm=predict.glm(mod3_glm,test3,se.fit = F,interval = "prediction",type="response")
+pre3_glm=ifelse(pre3_glm>=0.5,1,0)
+test3=test3%>%
+  mutate(prediction=pre3_glm,correct_pre=ifelse(pre3_glm==FGM,1,0))
+
+table3=test3%>%
+  select(prediction,FGM)%>%
+  group_by(FGM,prediction)%>%
+  summarize(n=n())
+table3_2=xtabs(n~FGM+prediction,table3)
+```
+#Table and graph for 2Pts logistic regression
+```{r, message=FALSE, warning=FALSE}
+#table
+
+library(xtable,quietly=T)
+
+library(htmlTable)
+
+Logistic_2pts_cm=confusion(yhat = test2$prediction, y = test2$FGM ,quietly = T)
+Logistic_2pts_martix=xtable(Logistic_2pts_cm, auto = TRUE)
+htmlTable(Logistic_2pts_martix)
+
+##print(Logistic_2pts_martix, type = "html")
+
+
+#kable(confusion(yhat = test2$prediction, y = test2$FGM ,quietly = T), position = "left", label = "2Pts logistic regression")
+#summary(mod2_glm)
+#(accuracy=mean(test2$correct_pre))
+
+
+#graph
+mosaic(table2_2, shade=TRUE, legend=TRUE,main="Prediction result for 2Pts Logistic Regression")
+```
+
+
+
+
+#Table for 3Pts logistic regression
+```{r, message=FALSE, warning=FALSE}
+#table
+
+#summary(mod3_glm)
+#(accuracy=mean(test3$correct_pre))
+library(xtable,quietly=T)
+Logistic_3pts_cm=confusion(yhat = test3$prediction, y = test3$FGM, quietly = TRUE)
+
+htmlTable(Logistic_3pts_cm)
+
+#xtable(Logistic_3pts_cm, auto = TRUE)
+
+
+#we can't generate a nice mosaic plot for 3pts because the prediction are mostly 0s
+#mosaic(table3_2, shade=TRUE, legend=TRUE)
+```
+
+For 2pt shots, we see that we get a sensitivity value of around 0.556, meaning that we can identify 55.6% of made shots to be made, and a specificity value of 0.619, meaning that we can identify 61.9% of missing shots to be missed. For 3pt shots we get a sensitivity of around 0.004 and a specificity of 0.996. While the prediction for 2 point shots is fair, slightly better than random, the prediction for 3pt shots is terrible as our model simply predicts that almost all 3pt shots will be missed. We wanted to see whether this trend was consistent in other models so we performed a Linear Discriminant Analysis (LDA) as well as a Decision Tree Model.  We found that the results were consistent - the model for 2 pts is fair that they give similar sensitivity and specificity, but the model for 3pts is unusable because all the models predict the results to be mostly missed shots.
+
+##LDA for 2pts
+```{r, message=FALSE, warning=FALSE}
+train2_lda=train2
+
+test2_lda=test2
+mlda <- lda(FGM~ . ,data = train2_lda,cv=T)
+lda.pre<- predict(mlda,newdata=test2_lda)
+
+library(xtable,quietly=T)
+LDA_2pts_cm=confusion(yhat = lda.pre$class, y = test2_lda$FGM, quietly = TRUE)
+
+htmlTable(LDA_2pts_cm)
+
+
+
+#LDA_2pts_martix=xtable(LDA_2pts_cm, auto = TRUE)
+
+
+
+#print(LDA_2pts_martix, type = "html")
+```
+
+#Decision Tree for 2pts
+```{r}
+shot_player_tree_2=shot_player%>%
+  select(FGM,LOCATION,FINAL_MARGIN,PERIOD,GAME_CLOCK,SHOT_CLOCK,DRIBBLES,TOUCH_TIME,SHOT_DIST,PTS_TYPE,Age,PER)%>%
+  subset(PTS_TYPE==2)
+
+
+shot_player_tree_2=na.omit(shot_player_tree_2)
+
+set.seed(12)
+smp_size <- floor(0.75 * nrow(shot_player_tree_2))
+train_ind <- sample(seq_len(nrow(shot_player_tree_2)), size = smp_size)
+train2_tree <- shot_player_tree_2[train_ind, ]
+test2_tree <- shot_player_tree_2[-train_ind, ]
+
+
+
+rpart_tree <- rpart(FGM~., data=train2_tree)
+
+
+pre=predict(rpart_tree,test2_tree)
+pre=ifelse(pre>0.5,1,0)
+
+test2_tree=test2_tree%>%
+  mutate(prediction_tree=pre)
+#table(test2_tree$FGM)
+
+
+library(xtable,quietly=T)
+tree_2pts_cm=confusion(yhat = test2_tree$prediction_tree, y = test2_tree$FGM, quietly = TRUE)
+#tree_2pts_martix=
+#print(tree_2pts_martix, type = "html")
+
+htmlTable(tree_2pts_cm)
+
+rpart.plot(rpart_tree, main = "Decision Tree for 2Pts")
+
+```
+
+##LDA for 3pts
+```{r, message=FALSE, warning=FALSE}
+train3_lda=train3
+
+test3_lda=test3
+mlda <- lda(FGM~ . ,data = train3_lda,cv=T)
+lda.pre<- predict(mlda,newdata=test3_lda)
+
+library(xtable,quietly=T)
+LDA_3pts_cm=confusion(yhat = lda.pre$class, y = test3_lda$FGM, quietly = TRUE)
+
+htmlTable(LDA_3pts_cm)
+
+#LDA_3pts_martix=xtable(LDA_3pts_cm, auto = TRUE)
+#print(LDA_3pts_martix, type = "html")
+
+```
+
+#Decision Tree for 3pts (confusion matrix doesn't display)
+```{r}
+shot_player_tree_3=shot_player%>%
+  select(FGM,LOCATION,FINAL_MARGIN,PERIOD,GAME_CLOCK,SHOT_CLOCK,DRIBBLES,TOUCH_TIME,SHOT_DIST,PTS_TYPE,Age,PER)%>%
+  subset(PTS_TYPE==3)
+
+
+shot_player_tree_3=na.omit(shot_player_tree_3)
+
+set.seed(1222)
+smp_size <- floor(0.5 * nrow(shot_player_tree_3))
+train_ind <- sample(seq_len(nrow(shot_player_tree_3)), size = smp_size)
+train3_tree <- shot_player_tree_3[train_ind, ]
+test3_tree <- shot_player_tree_3[-train_ind, ]
+
+
+
+rpart_tree <- rpart(FGM~., data=train3_tree)
+
+
+pre=predict(rpart_tree,test3_tree)
+pre=ifelse(pre>0.5,1,0)
+
+test3_tree=test3_tree%>%
+  mutate(prediction_tree=pre)
+
+#table(test3_tree$prediction_tree)
+
+#confusion(yhat = test3_tree$prediction_tree, y = test3_tree$FGM, quietly = TRUE)
+
+#plotcp(rpart_tree )
+
+rpart.plot(rpart_tree, main = "Decision Tree for 3Pts")
+```
+
+
+
+Since the models produced very similar outcomes, we decided to look at the logistic regression model closer to see the specific impacts of certain variables. The graph below shows the p values and coefficients of each of the variables we took into account in our model. The key point to note here is that the intercept value for 3pt shots is unreasonably high which visibly shows that our model for 3pt is lacking. This is because if the coefficients of all the other variables are set to 0, the intercept of our 3pt model would give a result of 0.875 accuracy which is unreasonably high.
+
+
+```{r, message=FALSE, warning=FALSE}
+coe=data.frame(Pts2_coefficients=summary(mod2_glm)$coefficients[,1], Pts3_coefficients=summary(mod3_glm)$coefficients[,1],
+Pts2_p=summary(mod2_glm)$coefficients[,4],
+Pts3_p=summary(mod3_glm)$coefficients[,4])
+
+var=row.names(coe)
+row.names(coe)=NULL
+co=coe
+coe=co
+coe=coe%>%
+  mutate(variables=var)%>%
+  gather(Pts2_coefficients,Pts3_coefficients,key="coefficients",value="coefficient_value")%>%
+  gather(Pts2_p,Pts3_p,key="pvalue",value="p_value")
+
+ggplot(coe,aes(x=variables, y=coefficient_value, group=coefficients, colour=coefficients))+
+  geom_line()+
+ geom_point(aes(size=p_value))+ coord_flip()+ggtitle("2Pts vs 3Pts Logistics Regression Output")
+
+```
+
+We found the striking difference between 2pt and 3pt shots to be very interesting.  Coupled with the fact that the defender distance correlation strength was different between the two, we concluded that both types of shots probably have different variables that influence them in different strengths. We can also conclude from our results that the variables we used in our model are not sufficient enough to create a reliable an accurate model to predict shot result and thus there must be other variables that influence the result to a greater extent. 
+
+
+
+#CONCLUSION
+
+ 
+For our first question, under the assumption that Defensive Win Shares per 48 minutes played is an accurate gauge of who the best defenders in the league are, we created a model which can successfully estimate the best defenders. We were able to conclude from our investigation of the question that creating a model solely based on defensive shooting statistics does not provide an accurate prediction of who the best defenders in the league are. However, the inclusion of defensive metrics in addition to defensive shooting statistics significantly improves this prediction. Additionally, basing the model solely on defensive metrics gives a less effective prediction of the best defenders than the combination of both.
+
+The limitations within our original prediction are that there are simply too many predictors missing, and even the predictors that we do have may not tell the entire story. A player is only attributed as the closest defender when a shot is taken - thus, if one of their teammates allows a drive to the basket and the player happens to be near the basket, they will be attributed as the defender, even if they weren’t the primary defender on the play. Additionally, the best defenders in the league are often assigned the matchup of the best offensive players on the other team, which leads to their opponent field goal percentage and shooting statistics to be higher than if they were guarding another player. Additionally, simply not having the steals, blocks, rebounds, and other important quantifiable defensive stats limited our original model. Another limitation is that we had to assume that defensive win shares per 48 minutes was the best predictor for a player’s defense which is accessible for all players. This was the best solution that we could find for quantifying how good a defender was. However, many of the things that make a player a great defender, such as their intensity, ability to defend on the largest stage, and ability to defend each position are not easily quantifiable. Often the ‘eye-test’ and watching the actual game is the only way to truly understand who the best defenders are. Despite these limitations, our model was able to fairly successfully estimate who the best defenders in the league are. 
+
+Our second question is focused on predicting the outcome of a 2 point and 3 point shot based on several variables that we considered from our data set. We found that none of our models were extremely useful in determining the outcome of a shot. While our primary focus was on using a logistic model that we created, we also tested other models such as LDA and decision trees to see if there would be a significant difference in our results. Ultimately, we found that those alternatives were not reliable either. We believe that the unreliability of our models is due to the fact that, once again, there are many variables that our data set does not include that would serve to improve the accuracy of our model. Because we were aware of this during our research, none of our results for this question were necessarily unusual. 
+
+There are several reasons why are conclusions for this question are significant in a broader perspective. Our logistic models (as well as our alternative models) ended up being unreliable when considering the outcome of a 2 or 3 point shot and there are various ways this can connect to the real world. For example, many (more significant) studies have been conducted worldwide that have ultimately ended with unreliable results, similar to ours. It is important to consider the reliability of results in a study because failure to do so can lead to the spread of falsified information. A perfect example of this is represented by the stem cell research at Harvard conducted by Dr. Piero Anversa in 2018. Basically, the main conclusion that Dr. Anversa and his group came to through there research was the human heart has the “ability to regenerate” but the data which they used to support this claim was ultimately determined as “fraudulent”. In relation to our research of the NBA dataset, we realized that our output was not dependable because there are several predictors outside of our dataset that are necessary to predict the outcome of a shot. Therefore, our results are unreliable and none of our findings are retainable to make broader conclusions. Doing so would be making the same mistake that Dr. Anversa made. In order for our study of this question to be furthered, we believe that more variables must be considered for our model to determine whether a shot is made. Such variables include stamina, fatigue, existing injuries, number of fouls, etc. We believe that the inclusion of such variables would help in increasing the accuracy of our model. For future work, we also recommend that 2pt shots and 3pt shots be studied separately to avoid problems that arise with Simpson's paradox. Lastly, figuring out the variables that influence shot result is greatly important to the real world as coaches and players can revise their training to focus more heavily on factors that lead to better results. Our findings also indicate that it may be beneficial to tailor trainings based on whether a player is attempting to improve 2pt shots or 3pt shots as the factors that affect these shots are different and vary in strength. Thus, further analysis has the potential to change the landscape of the entire game for players, coaches, and fans around the world.
+
+
+

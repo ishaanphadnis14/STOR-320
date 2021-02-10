@@ -1,0 +1,77 @@
+---
+title: "Lab 7"
+author: "Ishaan Phadnis"
+date: "November 15, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Instructions
+
+**Exercises:**  1,4 (Pg. 358); 1,4 (Pgs. 371)
+
+**Submission:** Submit via an electronic document on Sakai. Must be submitted as a HTML file generated in RStudio. All assigned problems are chosen according to the textbook *R for Data Science*. You do not need R code to answer every question. If you answer without using R code, delete the code chunk. If the question requires R code, make sure you display R code. If the question requires a figure, make sure you display a figure. A lot of the questions can be answered in written response, but require R code and/or figures for understanding and explaining.
+
+```{r, include=FALSE}
+library(tidyverse)
+library(modelr)
+options(na.action = na.warn)
+
+```
+
+
+# Chapter 18 (Pg. 358)
+
+##  Exercise 1
+```{r}
+#
+fit1 = lm(y~x, data = sim1)
+fit2 = loess(y~x, data = sim1,degree = 2)
+
+grid = sim1 %>% data_grid(x)
+grid1 = grid %>% add_predictions(fit1) 
+sim1_1 = sim1 %>% add_residuals(fit1)
+
+grid2 = grid %>% add_predictions(fit2)
+sim1_2 = sim1 %>% add_residuals(fit2)
+
+ggplot(sim1,aes(x=x))+ geom_point(aes(y=y))+ geom_line(data = grid1, aes(y = pred), color = 'red')+ geom_smooth(data = grid2, aes(y = pred),color = 'blue')
+```
+
+##  Exercise 4
+```{r}
+#
+ggplot() + geom_freqpoly(data = sim1_1, aes(abs(resid)), binwidth = 0.5,color = 'red')
+```
+By showing the absolute values of the residuals, it is much easier to view the spread of the residuals. The model assumes that the residuals have a mean of zero, and using the absolute values of the residuals essentially doubles the number of residuals. However, using the absolute values of residuals disregards information about the sign, and this means that the frequency polygon cannot show whether the model overestimates or underestimates the residuals.
+
+# Chapter 18 (Pg. 371)
+
+##  Exercise 1
+```{r}
+mod2a = lm(y~x - 1, data = sim2)
+mod2 = lm(y~x, data = sim2)
+
+mod2a$coefficients
+mod2$coefficients
+
+grid1 = sim2 %>% data_grid(x) %>% gather_predictions(mod2a,mod2)
+grid1
+```
+Equation will have no intercept, and the prediction is not affected by the change. 
+
+##  Exercise 4
+```{r}
+#
+mod1 = lm(y ~ x1 + x2, data = sim4)
+mod2 = lm(y ~ x1 * x2, data = sim4)
+
+resid_res = sim4 %>% gather_residuals(mod1, mod2)
+
+resid_res %>% ggplot(aes(x = resid, colour = model)) + geom_freqpoly(binwidth = 0.5)
+
+
+```
